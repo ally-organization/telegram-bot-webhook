@@ -4,8 +4,10 @@
 require 'vendor/autoload.php';
 
 // Load .env file
-$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
-$dotenv->load();
+if (getenv('APP_ENV') === 'development') {
+    $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
+    $dotenv->load();
+}
 
 use Telegram\Bot\Api;
 
