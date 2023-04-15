@@ -37,11 +37,26 @@ $message = $update['message'];
 $chatId = $message['chat']['id'];
 $text = $message['text'];
 
+$mp = Mixpanel::getInstance($_ENV["MIXPANEL_KEY"]);
+$mp->track("telegram-bot-request", [
+    "bot_name" => $botObject->getName(),
+    "message" => $message,
+    "chatId" => $chatId,
+    "text" => $text
+]);
+
 if ($text && $chatId) {
     $response = getOpenAIResponse($bot->getSystemMessage(), $openaiToken, $text);
     $telegram->sendMessage([
         'chat_id' => $chatId,
         'text' => $response,
+    ]);
+
+    $mp->track("telegram-bot-response", [
+        "bot_name" => $botObject->getName(),
+        "message" => $message,
+        "chatId" => $chatId,
+        "text" => $response
     ]);
 }
 
