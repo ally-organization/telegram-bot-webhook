@@ -9,7 +9,25 @@ $dotenv->load();
 use Telegram\Bot\Api;
 use GuzzleHttp\Client;
 
-$telegram = new Api($_ENV['TELEGRAM_TOKEN']);
+require_once 'Bot.php';
+require_once 'bots.php';
+
+$botName = $_GET['bot'];
+$bot = null;
+
+foreach ($bots as $botObject) {
+    if ($botObject->getName() === $botName) {
+        $bot = $botObject;
+        break;
+    }
+}
+
+if (!$bot) {
+    echo "Invalid bot name!";
+    exit;
+}
+
+$telegram = new Api($bot->getToken());
 $openaiToken = $_ENV['OPENAI_TOKEN'];
 
 $update = json_decode(file_get_contents('php://input'), true);
@@ -18,14 +36,14 @@ $chatId = $message['chat']['id'];
 $text = $message['text'];
 
 if ($text && $chatId) {
-    $response = getOpenAIResponse($openaiToken, $text);
+    $response = getOpenAIResponse($bot->getSystemMessage(), $openaiToken, $text);
     $telegram->sendMessage([
         'chat_id' => $chatId,
         'text' => $response,
     ]);
 }
 
-function getOpenAIResponse($token, $query)
+function getOpenAIResponse($systemMessage, $token, $query)
 {
     $client = new Client([
         'base_uri' => 'https://api.openai.com',
@@ -40,7 +58,7 @@ function getOpenAIResponse($token, $query)
         'messages' => [
             [
                 'role' => 'system',
-                'content' => 'You are a CTO.',
+                'content' => $systemMessage,
             ],
             [
                 'role' => 'user',

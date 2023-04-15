@@ -1,4 +1,5 @@
 <?php
+
 // Load Composer's autoloader
 require 'vendor/autoload.php';
 
@@ -8,13 +9,20 @@ $dotenv->load();
 
 use Telegram\Bot\Api;
 
-$telegram = new Api(getenv('TELEGRAM_BOT_TOKEN'));
-$result = $telegram->setWebhook([
-    'url' => 'https://SERVER_URL/telegram_openai_bot.php', // Replace with your server URL and path to the file
-]);
+require_once 'Bot.php';
+require_once 'bots.php';
 
-if ($result) {
-    echo "Webhook was set successfully!";
-} else {
-    echo "Error setting the webhook!";
+$serverUrl = $_ENV['SERVER_URL'] . '/telegram_openai_bot.php'; // Replace with your environment variable name
+
+foreach ($bots as $bot) {
+    $telegram = new Api($bot->getToken());
+    $result = $telegram->setWebhook([
+        'url' => $serverUrl . '?bot=' . urlencode($bot->getName()),
+    ]);
+
+    if ($result) {
+        echo $bot->getName() . " webhook was set successfully!\n";
+    } else {
+        echo "Error setting the " . $bot->getName() . " webhook!\n";
+    }
 }
